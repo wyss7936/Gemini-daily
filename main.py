@@ -8,7 +8,6 @@ from email.message import EmailMessage
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 def get_report():
-    # 전일 하루 동안의 구체적인 원인과 표 형식을 강조한 프롬프트
     prompt = """
     당신은 전문 금융 분석가입니다. 
     오늘 날짜 기준, 간밤(전일 종가까지 하루 동안) ICE 거래소의 금(Gold)과 은(Silver) 선물 시장을 분석해 주세요.
@@ -18,23 +17,24 @@ def get_report():
     3. **톤**: 전문적이고 간결한 한국어로 작성해 주세요.
     """
     
-    response = client.models.generate_content(
-        model='gemini-2.0-flash', 
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            tools=[types.Tool(google_search=types.GoogleSearch())]
+    try:
+        response = client.models.generate_content(
+            # 할당량 초과 에러를 피하기 위해 상대적으로 한도가 넉넉한 1.5 버전을 우선 사용합니다.
+            model='gemini-1.5-flash', 
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                tools=[types.Tool(google_search=types.GoogleSearch())]
+            )
         )
-    )
-    return response.text
+        return response.text
+    except Exception as e:
+        return f"리포트 생성 중 오류가 발생했습니다: {e}"
 
 def send_email(content):
     msg = EmailMessage()
-    # 이메일 본문에서 표가 깨지지 않도록 설정
     msg["Subject"] = f"📊 [ICE 시황] 금/은 일일 리포트 ({datetime.now().strftime('%Y-%m-%d')})"
     msg["From"] = os.environ["EMAIL_USER"]
     msg["To"] = os.environ["EMAIL_RECEIVER"]
-    
-    # 텍스트 리포트가 깔끔하게 보이도록 설정
     msg.set_content(content)
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
@@ -42,9 +42,6 @@ def send_email(content):
         smtp.send_message(msg)
 
 if __name__ == "__main__":
-    try:
-        report_content = get_report()
-        send_email(report_content)
-        print("Success!")
-    except Exception as e:
-        print(f"Error: {e}")
+    report_content = get_report()
+    send_email(report_content)
+    print("Success!")
