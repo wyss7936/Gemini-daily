@@ -2,7 +2,7 @@ name: Daily Gold Silver Report
 
 on:
   schedule:
-    - cron: '0 22 * * *' # 한국 시간 오전 7시
+    - cron: '0 22 * * *'
   workflow_dispatch:
 
 jobs:
