@@ -11,7 +11,7 @@ def get_report():
     prompt = "오늘 기준 ICE 거래소의 Gold/Silver 종가, 변화율, 주요 요인을 한국어로 리포트해줘."
     
     response = client.models.generate_content(
-        model='gemini-2.0-flash',
+        model='gemini-1.5-flash', # 더 안정적인 1.5 버전으로 변경
         contents=prompt,
         config=types.GenerateContentConfig(
             tools=[types.Tool(google_search=types.GoogleSearch())]
