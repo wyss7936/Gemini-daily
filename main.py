@@ -5,10 +5,11 @@ from google.genai import types
 import smtplib
 from email.message import EmailMessage
 
-# 1. 클라이언트 설정
+# 1. Gemini 클라이언트 설정
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 def get_report():
+    # 전일 하루 동안의 변동 원인과 표 형식을 강조한 프롬프트
     prompt = """
     당신은 전문 금융 분석가입니다. 
     오늘 날짜 기준, 간밤(전일 종가까지 하루 동안) ICE 거래소의 금(Gold)과 은(Silver) 선물 시장을 분석해 주세요.
@@ -19,8 +20,8 @@ def get_report():
     """
     
     try:
-        # 모델명 앞에 'models/'를 붙여 경로를 명확히 지정합니다.
-        # 1.5-flash 모델은 무료 티어에서 가장 안정적입니다.
+        # 모델명 앞에 'models/'를 붙여 경로를 명확히 지정하여 404 에러를 방지합니다.
+        # 무료 티어에서 한도가 넉넉한 1.5-flash 버전을 사용합니다.
         response = client.models.generate_content(
             model='models/gemini-1.5-flash', 
             contents=prompt,
@@ -30,7 +31,7 @@ def get_report():
         )
         return response.text
     except Exception as e:
-        # 에러 발생 시 상세 내용을 확인하기 위한 처리
+        # 에러 발생 시 상세 내용을 리턴하여 메일로 확인 가능하게 합니다.
         return f"리포트 생성 중 오류가 발생했습니다: {str(e)}"
 
 def send_email(content):
@@ -46,6 +47,6 @@ def send_email(content):
 
 if __name__ == "__main__":
     report_content = get_report()
-    # 어떤 결과가 나오든 메일을 발송하여 상태를 확인합니다.
+    # 오류 메시지가 포함되더라도 메일을 발송하여 상태를 확인합니다.
     send_email(report_content)
-    print("Success!")
+    print("Execution Finished.")
