@@ -18,9 +18,9 @@ def get_report():
     """
     
     try:
+        # 2026년 표준 모델명인 'gemini-2.0-flash'를 사용합니다.
         response = client.models.generate_content(
-            # 할당량 초과 에러를 피하기 위해 상대적으로 한도가 넉넉한 1.5 버전을 우선 사용합니다.
-            model='gemini-1.5-flash', 
+            model='gemini-2.0-flash', 
             contents=prompt,
             config=types.GenerateContentConfig(
                 tools=[types.Tool(google_search=types.GoogleSearch())]
@@ -28,7 +28,8 @@ def get_report():
         )
         return response.text
     except Exception as e:
-        return f"리포트 생성 중 오류가 발생했습니다: {e}"
+        # 상세 에러 파악을 위해 에러 내용을 리턴합니다.
+        return f"리포트 생성 중 오류가 발생했습니다: {str(e)}"
 
 def send_email(content):
     msg = EmailMessage()
@@ -43,5 +44,6 @@ def send_email(content):
 
 if __name__ == "__main__":
     report_content = get_report()
+    # "오류"가 포함되어 있어도 메일은 보내서 내용을 확인합니다.
     send_email(report_content)
-    print("Success!")
+    print("Execution Finished.")
