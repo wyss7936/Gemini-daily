@@ -5,7 +5,7 @@ from google.genai import types
 import smtplib
 from email.message import EmailMessage
 
-# 1. 클라이언트 설정
+# 1. Gemini 클라이언트 설정
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 def get_report():
@@ -19,8 +19,8 @@ def get_report():
     """
     
     try:
-        # 'models/' 경로와 '-latest' 별칭을 모두 제거한 순수 모델명을 사용합니다.
-        # v1beta와 정식 버전 모두에서 가장 호환성이 높은 명칭입니다.
+        # 2026년 기준 'google-genai' 라이브러리에서 가장 권장하는 호출 방식입니다.
+        # 모델 이름만 정확히 입력하여 v1beta 호환성 문제를 해결합니다.
         response = client.models.generate_content(
             model='gemini-1.5-flash', 
             contents=prompt,
@@ -30,6 +30,7 @@ def get_report():
         )
         return response.text
     except Exception as e:
+        # 에러 발생 시 상세 내용을 확인하기 위함입니다.
         return f"리포트 생성 중 오류가 발생했습니다: {str(e)}"
 
 def send_email(content):
