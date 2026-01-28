@@ -5,7 +5,7 @@ from google.genai import types
 import smtplib
 from email.message import EmailMessage
 
-# 1. Gemini 클라이언트 설정
+# 1. 클라이언트 설정
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 def get_report():
@@ -19,10 +19,10 @@ def get_report():
     """
     
     try:
-        # 2026년 기준 가장 범용적인 'gemini-1.5-flash-latest' 명칭을 사용합니다.
-        # 이 명칭은 404 에러를 피하는 데 가장 효과적입니다.
+        # 'models/' 경로와 '-latest' 별칭을 모두 제거한 순수 모델명을 사용합니다.
+        # v1beta와 정식 버전 모두에서 가장 호환성이 높은 명칭입니다.
         response = client.models.generate_content(
-            model='gemini-1.5-flash-latest', 
+            model='gemini-1.5-flash', 
             contents=prompt,
             config=types.GenerateContentConfig(
                 tools=[types.Tool(google_search=types.GoogleSearch())]
