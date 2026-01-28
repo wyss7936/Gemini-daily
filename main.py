@@ -18,9 +18,9 @@ def get_report():
     """
     
     try:
-        # 2026년 표준 모델명인 'gemini-2.0-flash'를 사용합니다.
+        # 무료 티어에서 가장 한도가 넉넉하고 안정적인 1.5-flash 모델을 명시적으로 호출합니다.
         response = client.models.generate_content(
-            model='gemini-2.0-flash', 
+            model='gemini-1.5-flash', 
             contents=prompt,
             config=types.GenerateContentConfig(
                 tools=[types.Tool(google_search=types.GoogleSearch())]
@@ -28,7 +28,9 @@ def get_report():
         )
         return response.text
     except Exception as e:
-        # 상세 에러 파악을 위해 에러 내용을 리턴합니다.
+        # 429 에러 발생 시 사용자에게 친절하게 안내합니다.
+        if "429" in str(e):
+            return "현재 구글 API 사용량이 초과되었습니다. 1분 후 다시 시도하거나 내일 아침 자동으로 실행될 때까지 기다려 주세요."
         return f"리포트 생성 중 오류가 발생했습니다: {str(e)}"
 
 def send_email(content):
@@ -44,6 +46,6 @@ def send_email(content):
 
 if __name__ == "__main__":
     report_content = get_report()
-    # "오류"가 포함되어 있어도 메일은 보내서 내용을 확인합니다.
+    # 에러 메시지만 있더라도 일단 메일을 보내서 상황을 확인합니다.
     send_email(report_content)
     print("Execution Finished.")
