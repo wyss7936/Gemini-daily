@@ -2,7 +2,7 @@ name: Daily Gold Silver Report
 
 on:
   schedule:
-    - cron: '0 22 * * *'
+    - cron: '50 21 * * *'
   workflow_dispatch:
 
 jobs:
