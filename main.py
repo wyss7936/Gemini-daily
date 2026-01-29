@@ -5,7 +5,7 @@ from google.genai import types
 import smtplib
 from email.message import EmailMessage
 
-# 1. Gemini 클라이언트 설정
+# 1. 클라이언트 설정
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 def get_report():
@@ -13,25 +13,30 @@ def get_report():
     당신은 전문 금융 분석가입니다. 
     오늘 날짜 기준, 간밤(전일 종가까지 하루 동안) ICE 거래소의 금(Gold)과 은(Silver) 선물 시장을 분석해 주세요.
 
-    1. **가격 데이터**: 표(Table) 형식을 사용하여 [종가], [전일 대비 변동폭], [변동률(%)]을 일목요연하게 작성해 주세요.
-    2. **하루 변동 원인 분석**: 장기적 전망은 배제하고, **오직 전일 하루 동안 발생한 구체적인 경제 지표 발표, 연준 위원 발언, 지정학적 사건, 달러 인덱스 변화** 등 실시간 변동 요인을 3가지 이내로 요약해 주세요.
+    1. **가격 데이터**: 표(Table) 형식을 사용하여 [종가], [전일 대비 변동폭], [변동률(%)]을 작성해 주세요.
+    2. **하루 변동 원인 분석**: 전일 하루 동안 발생한 구체적인 경제 지표, 연준 발언, 달러 인덱스 변화를 요약해 주세요.
     3. **톤**: 전문적이고 간결한 한국어로 작성해 주세요.
     """
     
-    try:
-        # 2026년 기준 'google-genai' 라이브러리에서 가장 권장하는 호출 방식입니다.
-        # 모델 이름만 정확히 입력하여 v1beta 호환성 문제를 해결합니다.
-        response = client.models.generate_content(
-            model='gemini-1.5-flash', 
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                tools=[types.Tool(google_search=types.GoogleSearch())]
+    # 시도해볼 모델 목록 (가장 성공 확률이 높은 순서)
+    model_names = ['gemini-2.0-flash', 'models/gemini-1.5-flash', 'gemini-1.5-flash']
+    
+    for model_name in model_names:
+        try:
+            response = client.models.generate_content(
+                model=model_name, 
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    tools=[types.Tool(google_search=types.GoogleSearch())]
+                )
             )
-        )
-        return response.text
-    except Exception as e:
-        # 에러 발생 시 상세 내용을 확인하기 위함입니다.
-        return f"리포트 생성 중 오류가 발생했습니다: {str(e)}"
+            return response.text
+        except Exception as e:
+            if "404" in str(e):
+                continue # 다음 모델로 재시도
+            return f"리포트 생성 중 오류 발생 ({model_name}): {str(e)}"
+    
+    return "제공된 모든 모델 이름을 시도했으나 찾을 수 없습니다. API 키 설정을 확인해 주세요."
 
 def send_email(content):
     msg = EmailMessage()
